@@ -13,6 +13,12 @@ let env = new ok.Environment(null);
 const MAX_OUTPUT_LINES = 8;
 const TIMEOUT_MS = 5 * 1000;
 
+const SESSION_MAP = {};
+
+function newSession(nick) {
+  return {nick, level: 0};
+}
+
 const runK = (src) => {
   return new Promise((resolve, reject) => {
     const result = child_process.spawnSync(process.execPath,
@@ -56,10 +62,16 @@ fs.readFile("./config.json", (error, raw_data) => {
     }
     else if(msg[0] === "\\") { // command
       const s = msg.split(" ");
-      const cmd = s[0]; args = s.slice(1);
+      const cmd = s[0], args = s.slice(1);
 
       if(cmd === "\\q")
         process.exit();
+      else if(cmd === "\\start") {
+        client.say(to, `Welcome, ${from}. You will be given a set of problem descriptions. Use '\\s <answer>' to submit your answer.`);
+        client.say(to, `${from}: Please review the oK manual at < https://github.com/JohnEarnest/ok/blob/gh-pages/docs/Manual.md >.`);
+
+        SESSION_MAP[from] = newSession(from);
+      }
     }
   });
 });
