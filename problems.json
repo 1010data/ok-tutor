@@ -15,7 +15,7 @@
 			{
 				"name": "obvious order",
 				"prompt": "Ok, how about 2+3*5?",
-				"wants": "17",
+				"wants": "17"
 			},
 			{
 				"name": "non-obvious order",
@@ -23,15 +23,14 @@
 				"wants": "16",
 				"hints": {
 					"11" : "Expressions evaluate strictly right to left without obeying precedence.",
-					"235" : "Numbers still aren't strings.",
+					"235" : "Numbers still aren't strings."
 				}
-			},
+			}
 		]
 	},
 	{
 		"title": "Level 2: Conformism",
 		"tests": [
-			
 		]
-	},
+	}
 ]
