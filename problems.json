@@ -60,5 +60,54 @@
 				}
 			}
 		]
+	},
+	{
+		"title": "Level 3: Functionality",
+		"tests": [
+			{
+				"name": "increment",
+				"type": "func",
+				"prompt": "Write a monad which increments its input by one.",
+				"cases": [
+					{
+						"args":"[5]",
+						"wants":"6",
+						"hint":"Incrementing 5 should produce 6."
+					},
+					{
+						"args":"[0]",
+						"wants":"1",
+						"hint":"Incrementing 0 should produce 1."
+					},
+					{
+						"args":"[1 2 3]",
+						"wants":"2 3 4",
+						"hint":"This definition should work for lists as well as scalars."
+					}
+				]
+			},
+			{
+				"name": "abs",
+				"type": "func",
+				"prompt": "Write a monad which returns the absolute value of its input.",
+				"cases": [
+					{
+						"args":"[234]",
+						"wants":"234",
+						"hint":"The absolute value of a positive number remains the same."
+					},
+					{
+						"args":"[-967.8]",
+						"wants":"967.8",
+						"hint":"The absolute value of a negative number should be positive."
+					},
+					{
+						"args":"[0 24 -34 -9999]",
+						"wants":"0 24 34 9999",
+						"hint":"This definition should work for lists as well as scalars."
+					}
+				]
+			}
+		]
 	}
 ]
