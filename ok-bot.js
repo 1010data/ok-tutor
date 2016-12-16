@@ -16,7 +16,7 @@ const TIMEOUT_MS = 5 * 1000;
 const SESSION_MAP = {};
 
 function newSession(nick) {
-  return {nick, level: 0};
+  return {nick, problemIndex: 0, testIndex: 0};
 }
 
 const runK = (src) => {
@@ -39,39 +39,106 @@ const runK = (src) => {
   });
 };
 
-fs.readFile("./config.json", (error, raw_data) => {
-  if (error) throw error;
-  const config = JSON.parse(raw_data);
-  const client = new irc.Client(config.server, config.nickname, {
-    channels: config.channels
-  });
+const config = JSON.parse(fs.readFileSync("./config.json"));
+const problems = JSON.parse(fs.readFileSync("problems.json"));
+const client = new irc.Client(config.server, config.nickname, {
+  channels: config.channels
+});
 
-  client.addListener("message", (from, to, msg) => {
-    if (to.startsWith("#") && msg.startsWith(config.prompt)) {
-      runK(msg.substring(config.prompt.length)).then((result) => {
-        const lines = result.split("\n").slice(0, -1);
-        const line_amount = Math.min(lines.length, MAX_OUTPUT_LINES);
-        for (let i = 0; i < line_amount; ++i) {
-          client.say(to, `${from}: ${lines[i]}`);
+client.addListener("message", (from, to, msg) => {
+  let session = SESSION_MAP[from] || null;
+  let currentTest = session && problems[session.problemIndex].tests[session.testIndex];
+
+  function reply(msg) {
+    client.say(to, `${from}: ${msg}`);
+  }
+
+  function nextTest() {
+    session.testIndex++;
+
+    console.log("test index:", session.testIndex)
+
+    if(session.testIndex >= problems[session.problemIndex].tests.length) {
+      session.problemIndex++;
+
+      console.log("problem index:", session.problemIndex)
+
+      if(session.problemIndex >= problems.length || problems[session.problemIndex].tests.length === 0) {
+        reply("You've finished all of the problems. Congratulations!");
+        SESSION_MAP[from] = undefined;
+        return null;
+      }
+      else
+        session.testIndex = 0;
+    }
+
+    console.log("test / problem index:", session.testIndex, session.problemIndex);
+
+    return problems[session.problemIndex].tests[session.testIndex];
+  }
+
+  if (to.startsWith("#") && msg.startsWith(config.prompt)) {
+    runK(msg.substring(config.prompt.length)).then((result) => {
+      const lines = result.split("\n").slice(0, -1);
+      const line_amount = Math.min(lines.length, MAX_OUTPUT_LINES);
+      for (let i = 0; i < line_amount; ++i) {
+        client.say(to, `${from}: ${lines[i]}`);
+      }
+      if (lines.length > MAX_OUTPUT_LINES) client.say(to, `${from}: ...`);
+    }).catch((err) => {
+      console.trace();
+      client.say(to, `${from}: ERROR: ${err}`);
+    });
+  }
+  else if(msg[0] === "\\") { // command
+    const s = msg.split(" ");
+    const cmd = s[0], args = s.slice(1);
+
+    if(cmd === "\\q")
+      process.exit();
+    else if(cmd === "\\start") {
+      reply(`Welcome. You will be given a set of problem descriptions. Use '\\s <answer>' to submit your answer.`);
+      reply(`Please review the oK manual at < https://github.com/JohnEarnest/ok/blob/gh-pages/docs/Manual.md >.`);
+
+      if(!session)
+        SESSION_MAP[from] = session = newSession(from);
+      else
+        reply("You already have a session running. Nice try.");
+
+      reply(problems[session.problemIndex].tests[session.testIndex].prompt);
+    }
+    else if(cmd === "\\s") { // submit
+      runK(args.join(" ")).then((result) => {
+        result = result.trim();
+        console.log(`User ${from} submits '${result}'`);
+
+        if(result === currentTest.wants) {
+          console.log(`User ${from} finished problem ${currentTest.name}.`);
+
+          currentTest = nextTest();
+
+          if(currentTest)
+            reply(currentTest.prompt);
         }
-        if (lines.length > MAX_OUTPUT_LINES) client.say(to, `${from}: ...`);
+        else {
+          let hasHint = false;
+          for(const hintInput in currentTest.hints) {
+            console.log(`Hint: ${hintInput}`);
+            if(result === hintInput) {
+              console.log(`Dispensed hint to user ${from}.`);
+              reply(currentTest.hints[hintInput]);
+              hasHint = true;
+              break;
+            }
+          }
+
+          if(!hasHint)
+            reply("Not the correct answer. Experiment and try again!");
+        }
       }).catch((err) => {
         console.trace();
-        client.say(to, `${from}: ERROR: ${err}`);
+        reply(`ERROR: ${err}`);
       });
     }
-    else if(msg[0] === "\\") { // command
-      const s = msg.split(" ");
-      const cmd = s[0], args = s.slice(1);
-
-      if(cmd === "\\q")
-        process.exit();
-      else if(cmd === "\\start") {
-        client.say(to, `Welcome, ${from}. You will be given a set of problem descriptions. Use '\\s <answer>' to submit your answer.`);
-        client.say(to, `${from}: Please review the oK manual at < https://github.com/JohnEarnest/ok/blob/gh-pages/docs/Manual.md >.`);
-
-        SESSION_MAP[from] = newSession(from);
-      }
-    }
-  });
+  }
 });
