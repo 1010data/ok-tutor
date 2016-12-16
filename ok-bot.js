@@ -48,7 +48,7 @@ fs.readFile("./config.json", (error, raw_data) => {
 
   client.addListener("message", (from, to, msg) => {
     if (to.startsWith("#") && msg.startsWith(config.prompt)) {
-      runK(msg.substring(2)).then((result) => {
+      runK(msg.substring(config.prompt.length)).then((result) => {
         const lines = result.split("\n").slice(0, -1);
         const line_amount = Math.min(lines.length, MAX_OUTPUT_LINES);
         for (let i = 0; i < line_amount; ++i) {
