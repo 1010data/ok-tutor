@@ -4,6 +4,7 @@
 		"tests": [
 			{
 				"name": "sums",
+				"type": "raw",
 				"prompt": "What will 1+2 evaluate to?",
 				"wants": "3",
 				"hints": {
@@ -14,11 +15,13 @@
 			},
 			{
 				"name": "obvious order",
+				"type": "raw",
 				"prompt": "Ok, how about 2+3*5?",
 				"wants": "17"
 			},
 			{
 				"name": "non-obvious order",
+				"type": "raw",
 				"prompt": "And what about 2*3+5?",
 				"wants": "16",
 				"hints": {
@@ -33,11 +36,13 @@
 		"tests": [
 			{
 				"name": "space separated list",
+				"type": "raw",
 				"prompt": "What will 1 2 evaluate to?",
 				"wants": "1 2"
 			},
 			{
 				"name": "atom-list conform",
+				"type": "raw",
 				"prompt": "So then, what will 1+2 3 evaluate to?",
 				"wants": "3 4",
 				"hints": {
@@ -47,6 +52,7 @@
 			},
 			{
 				"name": "list-list conform",
+				"type": "raw",
 				"prompt": "How about 2 3+5 10?",
 				"wants": "7 13",
 				"hints": {
