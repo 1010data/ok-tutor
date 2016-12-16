@@ -7,8 +7,10 @@ const child_process = require("child_process");
 const fs = require("fs");
 const irc = require("irc");
 const ok = require("./lib/ok/oK");
+const oklog = require("./ok-log.js");
 
 let env = new ok.Environment(null);
+let log = new oklog.OkLog("ok-log.sdb");
 
 const MAX_OUTPUT_LINES = 8;
 const TIMEOUT_MS = 5 * 1000;
