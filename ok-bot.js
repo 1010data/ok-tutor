@@ -108,6 +108,11 @@ client.addListener("message", (from, to, msg) => {
       reply(problems[session.problemIndex].tests[session.testIndex].prompt);
     }
     else if(cmd === "\\s") { // submit
+      if(!session) {
+        reply("Please start a session first.");
+        return;
+      }
+
       runK(args.join(" ")).then((result) => {
         result = result.trim();
         console.log(`User ${from} submits '${result}'`);
