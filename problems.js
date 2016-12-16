@@ -3,7 +3,7 @@
 		title: "Level 1: First Steps"
 		tests: [
 			{
-				name: "problem 1.1",
+				name: "sums",
 				prompt: "What will 1+2 evaluate to?",
 				wants: "3",
 				hints: {
@@ -13,12 +13,12 @@
 				}
 			},
 			{
-				name: "problem 1.2",
+				name: "obvious order",
 				prompt: "Ok, how about 2+3*5?",
 				wants: "17",
 			},
 			{
-				name: "problem 1.3",
+				name: "non-obvious order",
 				prompt: "And what about 2*3+5?",
 				wants: "16",
 				hints: {
