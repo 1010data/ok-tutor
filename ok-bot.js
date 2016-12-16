@@ -8,7 +8,7 @@ const fs = require("fs");
 const irc = require("irc");
 const ok = require("./lib/ok/oK");
 
-let env = ok.baseEnv();
+let env = new ok.Environment(null);
 
 const MAX_OUTPUT_LINES = 8;
 const TIMEOUT_MS = 5 * 1000;
@@ -19,7 +19,6 @@ const runK = (src) => {
                                            ["eval-args.js", src, JSON.stringify(env.d)],
                                            {timeout: TIMEOUT_MS,
                                             encoding: "utf-8"});
-
     if (result.error) {
       if (result.error.code == "ETIMEDOUT") {
         reject(`Timed out after ${TIMEOUT_MS / 1000} seconds.`);
@@ -51,8 +50,16 @@ fs.readFile("./config.json", (error, raw_data) => {
         }
         if (lines.length > MAX_OUTPUT_LINES) client.say(to, `${from}: ...`);
       }).catch((err) => {
+        console.trace();
         client.say(to, `${from}: ERROR: ${err}`);
       });
+    }
+    else if(msg[0] === "\\") { // command
+      const s = msg.split(" ");
+      const cmd = s[0]; args = s.slice(1);
+
+      if(cmd === "\\q")
+        process.exit();
     }
   });
 });

@@ -14,6 +14,7 @@ if (process.argv[2] !== undefined && process.argv[3] !== undefined) {
   try {
     result = runK(process.argv[2]);
   } catch (err) {
+    console.trace();
     result = `ERROR: ${err.message}`;
   }
   console.log(JSON.stringify({
