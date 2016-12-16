@@ -1,6 +1,6 @@
 /* jshint esnext: true, node: true */
-// An IRC bot for the k6 programming language,
-// using oK from : https://github.com/JohnEarnest/ok
+// An educational IRC bot for the K programming language
+
 "use strict";
 
 const child_process = require("child_process");
@@ -18,27 +18,25 @@ const TIMEOUT_MS = 5 * 1000;
 const SESSION_MAP = {};
 
 function newSession(nick) {
-  return {nick, problemIndex: 0, testIndex: 0};
+  return {nick, problemIndex: 2, testIndex: 0};
 }
 
-const runK = (src) => {
-  return new Promise((resolve, reject) => {
-    const result = child_process.spawnSync(process.execPath,
-                                           ["eval-args.js", src, JSON.stringify(env.d)],
-                                           {timeout: TIMEOUT_MS,
-                                            encoding: "utf-8"});
-    if (result.error) {
-      if (result.error.code == "ETIMEDOUT") {
-        reject(`Timed out after ${TIMEOUT_MS / 1000} seconds.`);
-      } else {
-        reject(result.error.code);
-      }
+function runK(src) {
+  const result = child_process.spawnSync(process.execPath,
+                                         ["eval-args.js", src, JSON.stringify(env.d)],
+                                         {timeout: TIMEOUT_MS,
+                                          encoding: "utf-8"});
+  if (result.error) {
+    if (result.error.code == "ETIMEDOUT") {
+      throw Error(`Timed out after ${TIMEOUT_MS / 1000} seconds.`);
     } else {
-      const json_result = JSON.parse(result.stdout);
-      env.d = json_result.environment;
-      resolve(json_result.output);
+      throw Error(result.error.code);
     }
-  });
+  } else {
+    const json_result = JSON.parse(result.stdout);
+    env.d = json_result.environment;
+    return json_result.output;
+  }
 };
 
 const config = JSON.parse(fs.readFileSync("./config.json"));
@@ -58,8 +56,6 @@ client.addListener("message", (from, to, msg) => {
   function nextTest() {
     session.testIndex++;
 
-    console.log("test index:", session.testIndex)
-
     if(session.testIndex >= problems[session.problemIndex].tests.length) {
       session.problemIndex++;
 
@@ -77,6 +73,51 @@ client.addListener("message", (from, to, msg) => {
     console.log("test / problem index:", session.testIndex, session.problemIndex);
 
     return problems[session.problemIndex].tests[session.testIndex];
+  }
+
+  function testRun(input, wants) {
+    return runK(input).trim() === wants;
+  }
+
+  function testRaw(input, wants, hints) {
+    hints = hints || {};
+
+    const correct = testRun(input, wants);
+
+    if(!correct) {
+      let hasHint = false;
+      for(const hintInput in hints) {
+        console.log(`Hint: ${hintInput}`);
+        if(result === hintInput) {
+          console.log(`Dispensed hint to user ${from}.`);
+          reply(hints[hintInput]);
+          hasHint = true;
+          break;
+        }
+      }
+
+      if(!hasHint)
+        reply("Not the correct answer. Experiment and try again!");
+    }
+
+    return correct;
+  }
+
+  function testFunc(input) {
+    for(const case_ of currentTest.cases) {
+      const correct = testRun(input + case_.args, case_.wants);
+
+      if(!correct) {
+        if(case_.hint)
+          reply(`Hint: ${case_.hint}`);
+        else
+          reply("Not the correct answer. Experiment and try again!");
+
+        return false;
+      }
+    }
+
+    return true;
   }
 
   if (to.startsWith("#") && msg.startsWith(config.prompt)) {
@@ -115,37 +156,30 @@ client.addListener("message", (from, to, msg) => {
         return;
       }
 
-      runK(args.join(" ")).then((result) => {
-        result = result.trim();
-        console.log(`User ${from} submits '${result}'`);
+      const input = args.join(" ");
+      console.log(`User ${from} submits input '${input}'`);
 
-        if(result === currentTest.wants) {
-          console.log(`User ${from} finished problem ${currentTest.name}.`);
+      try {
+        let correct;
 
-          currentTest = nextTest();
+        if(currentTest.type === "raw")
+          correct = testRaw(input, currentTest.wants, currentTest.hints);
+        else if(currentTest.type === "func")
+          correct = testFunc(input);
 
-          if(currentTest)
-            reply(currentTest.prompt);
-        }
-        else {
-          let hasHint = false;
-          for(const hintInput in currentTest.hints) {
-            console.log(`Hint: ${hintInput}`);
-            if(result === hintInput) {
-              console.log(`Dispensed hint to user ${from}.`);
-              reply(currentTest.hints[hintInput]);
-              hasHint = true;
-              break;
-            }
+          if(correct) {
+            console.log(`User ${from} finished problem ${currentTest.name}.`);
+
+            currentTest = nextTest();
+
+            if(currentTest)
+              reply(currentTest.prompt);
           }
-
-          if(!hasHint)
-            reply("Not the correct answer. Experiment and try again!");
-        }
-      }).catch((err) => {
+      }
+      catch(err) {
         console.trace();
-        reply(`ERROR: ${err}`);
-      });
+        reply(`ERROR: ${err.toString()}`);
+      }
     }
   }
 });
