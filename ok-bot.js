@@ -35,13 +35,13 @@ const runK = (src) => {
 
 fs.readFile("./config.json", (error, raw_data) => {
   if (error) throw error;
-  const json_data = JSON.parse(raw_data);
-  const client = new irc.Client(json_data.server, json_data.nickname, {
-    channels: json_data.channels
+  const config = JSON.parse(raw_data);
+  const client = new irc.Client(config.server, config.nickname, {
+    channels: config.channels
   });
 
   client.addListener("message", (from, to, msg) => {
-    if (to.startsWith("#") && msg.startsWith("k) ")) {
+    if (to.startsWith("#") && msg.startsWith(config.prompt)) {
       runK(msg.substring(2)).then((result) => {
         const lines = result.split("\n").slice(0, -1);
         const line_amount = Math.min(lines.length, MAX_OUTPUT_LINES);
