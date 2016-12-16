@@ -31,6 +31,28 @@
 	{
 		"title": "Level 2: Conformism",
 		"tests": [
+			{
+				"name": "space separated list",
+				"prompt": "What will 1 2 evaluate to?",
+				"wants": "1 2"
+			},
+			{
+				"name": "atom-list conform",
+				"prompt": "So then, what will 1+2 3 evaluate to?",
+				"wants": "3 4",
+				"hints": {
+					"1 2 3": "The + operator is sum, not concatenate.",
+					"3 3": "The the sum of a scalar and a vector adds the scalar to each vector element."
+				}
+			},
+			{
+				"name": "list-list conform",
+				"prompt": "How about 2 3+5 10?",
+				"wants": "7 13",
+				"hints": {
+					"2 8 10": "Remember, 2 3 is a list, and so is 5 10."
+				}
+			}
 		]
 	}
 ]
