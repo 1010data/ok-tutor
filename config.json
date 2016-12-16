@@ -1,7 +1,8 @@
 {
     "server": "irc.freenode.net",
     "nickname": "ok-tutor",
+    "prompt":   "ok)",
     "channels": [
-        "##ok-tutor",
+        "##ok-tutor"
     ]
 }
