@@ -1,10 +1,7 @@
 {
     "server": "irc.freenode.net",
-    "nickname": "ok-bot",
+    "nickname": "ok-tutor",
     "channels": [
-        "#jsoftware",
-        "#learnprogramming",
-        "#kq",
-        "#lpmc"
+        "##ok-tutor",
     ]
 }
